@@ -1,0 +1,17 @@
+{
+    "name": "Down2Jam4Unity",
+    "rootNamespace": "Down2Jam4Unity",
+    "references": [
+        "GUID:188b3715ef7d23342afc9ffa6530c143",
+        "GUID:2eadefb4b6a78dd4ab2272cf28a0cabb"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

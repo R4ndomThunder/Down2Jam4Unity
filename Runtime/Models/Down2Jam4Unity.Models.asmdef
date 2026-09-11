@@ -1,0 +1,14 @@
+{
+    "name": "Down2Jam4Unity.Models",
+    "rootNamespace": "Down2Jam4Unity.Models",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
