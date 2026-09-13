@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using Random = UnityEngine.Random;
 
 namespace Down2Jam4Unity.Utility
 {
@@ -68,13 +69,37 @@ namespace Down2Jam4Unity.Utility
         /// <param name="contentType">Should be always multipart/form-data</param>
         /// <param name="customHeaders">Other needed headers (such as auth). Optional.</param>
         /// <returns></returns>
-        public static async Task<TResultType> Upload<TResultType>(string url, WWWForm form, string contentType = "multipart/form-data", List<RequestHeader> customHeaders = null)
+        public static async Task<TResultType> Upload<TResultType>(string url, List<IMultipartFormSection> form, byte[] boundary, string contentType = "multipart/form-data", List<RequestHeader> customHeaders = null)
         {
             Debug.Log($"[Upload] ~ url: {url}");
 
-            using var www = UnityWebRequest.Post($"{url}", form);
+            using var www = new UnityWebRequest(url, "POST");
 
             www.SetRequestHeader("Content-Type", contentType);
+            www.downloadHandler = new DownloadHandlerBuffer();
+            byte[] payload = null;
+
+            if (form != null && form.Count != 0)
+            {
+                payload = SerializeFormSections(form, boundary);
+            }
+
+            if (payload == null)
+            {
+                Debug.LogError($"Payload is empty.");
+                return default;
+            }
+
+            var content = System.Text.Encoding.UTF8.GetString(payload);
+
+            Debug.Log(content);
+
+            UploadHandler uploadHandler = new UploadHandlerRaw(payload)
+            {
+                contentType = "multipart/form-data; boundary=" + System.Text.Encoding.UTF8.GetString(boundary, 0, boundary.Length)
+            };
+
+            www.uploadHandler = uploadHandler;
 
             if (customHeaders != null)
                 foreach (var header in customHeaders)
@@ -254,6 +279,87 @@ namespace Down2Jam4Unity.Utility
 
                 return default;
             }
+        }
+
+        public static byte[] GenerateBoundary()
+        {
+            // Generate a random boundary
+            byte[] boundary = new byte[40];
+            for (int i = 0; i < 40; i++)
+            {
+                int randomChar = Random.Range(48, 110);
+                if (randomChar > 57) // skip unprintable chars between 57 and 64 (inclusive)
+                    randomChar += 7;
+                if (randomChar > 90) // and 91 and 96 (inclusive)
+                    randomChar += 6;
+                boundary[i] = (byte)randomChar;
+            }
+            return boundary;
+        }
+
+        ///<summary>Converts a List of IMultipartFormSection objects into a byte array containing raw multipart form data.</summary>
+        ///<param name="multipartFormSections">A List of <see cref="IMultipartFormSection" /> objects.</param>
+        ///<param name="boundary">A unique boundary string to separate the form sections.</param>
+        ///<returns>A byte array of raw multipart form data.</returns>
+        ///<seealso cref="GenerateBoundary" />
+        public static byte[] SerializeFormSections(List<IMultipartFormSection> multipartFormSections, byte[] boundary)
+        {
+            if (multipartFormSections == null || multipartFormSections.Count == 0)
+                return null;
+
+            byte[] crlf = System.Text.Encoding.UTF8.GetBytes("\r\n");
+            byte[] dDash = System.Text.Encoding.ASCII.GetBytes("--");
+
+            int estimatedSize = 0;
+            foreach (IMultipartFormSection section in multipartFormSections)
+            {
+                estimatedSize += 64 + section.sectionData.Length;
+            }
+
+            List<byte> formData = new List<byte>(estimatedSize);
+            foreach (IMultipartFormSection section in multipartFormSections)
+            {
+                string disposition = "form-data";
+
+                string sectionName = section.sectionName;
+                string fileName = section.fileName;
+
+                string header = "Content-Disposition: " + disposition;
+
+                if (!string.IsNullOrEmpty(sectionName))
+                {
+                    header += "; name=\"" + sectionName + "\"";
+                }
+
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    header += "; filename=\"" + fileName + "\"";
+                }
+
+                header += "\r\n";
+
+                string contentType = section.contentType;
+                if (!string.IsNullOrEmpty(contentType))
+                {
+                    header += "Content-Type: " + contentType + "\r\n";
+                }
+
+                formData.AddRange(crlf);
+                formData.AddRange(dDash);
+                formData.AddRange(boundary);
+                formData.AddRange(crlf);
+                formData.AddRange(System.Text.Encoding.UTF8.GetBytes(header));
+                formData.AddRange(crlf);
+                formData.AddRange(section.sectionData);
+            }
+
+            // end sections with boundary delimiter (https://tools.ietf.org/html/rfc2046)
+            formData.AddRange(crlf);
+            formData.AddRange(dDash);
+            formData.AddRange(boundary);
+            formData.AddRange(dDash);
+            formData.AddRange(crlf);
+            return formData.ToArray();
         }
     }
 }

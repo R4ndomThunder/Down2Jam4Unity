@@ -1,18 +1,16 @@
+using Down2Jam4Unity.Models;
+using Down2Jam4Unity.Utility;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using UnityEngine;
-using Down2Jam4Unity.Models;
-using Down2Jam4Unity.Utility;
+using UnityEngine.Networking;
 
 namespace Down2Jam4Unity
 {
     public static class JamcoreAPI
     {
         public const string ENDPOINT = "https://d2jam.com/api/v1";
-
-        public static string token;
 
         public static async Task<LoginData.Response> Login(string username, string password)
         {
@@ -42,7 +40,7 @@ namespace Down2Jam4Unity
             return await CRUDUtility.Post<AchievementData.Response>($"{ENDPOINT}/achievement", JsonConvert.SerializeObject(body), customHeaders: headers);
         }
 
-        public static async Task<ImageData.Response> UploadImage(string fileUrl, string token)
+        public static async Task<ImageData.Response> UploadImage(string filePath, string token)
         {
             var headers = new List<RequestHeader>()
             {
@@ -51,11 +49,16 @@ namespace Down2Jam4Unity
                 }
             };
 
-            byte[] file = File.ReadAllBytes(fileUrl);
-            WWWForm form = new();
+            byte[] byteData = File.ReadAllBytes(filePath);
+            var fileName = Path.GetFileName(filePath);
 
-            form.AddBinaryData("upload", file);
-            return await CRUDUtility.Upload<ImageData.Response>($"{ENDPOINT}/image", form, contentType: "multipart/form-data; boundary=----WebKitFormBoundaryGaZZtKJb8URr1d7P", customHeaders: headers);
+            List<IMultipartFormSection> form = new();
+            var aaa = new MultipartFormFileSection("upload", byteData, fileName, "image/png");
+            form.Add(aaa);
+
+            byte[] boundary = System.Text.Encoding.UTF8.GetBytes("----WebKitFormBoundarycB6W4LTiLz6oXMuB");
+
+            return await CRUDUtility.Upload<ImageData.Response>($"{ENDPOINT}/image", form, boundary, contentType: "application/json; charset=utf-8", customHeaders: headers);
         }
 
         public static async Task<LeaderboardData.Response> UploadScoreOnLeaderboard(int leaderboardId, int score, string imgPath, string token)
@@ -75,6 +78,28 @@ namespace Down2Jam4Unity
             };
 
             return await CRUDUtility.Post<LeaderboardData.Response>($"{ENDPOINT}/score", JsonConvert.SerializeObject(body), customHeaders: headers);
+        }
+
+        public static async Task<LoginData.TokenResponse> LoginWithToken(string userName, string gameSlug)
+        {
+            var req = new LoginData.TokenRequest
+            {
+                clientName = userName,
+                gameSlug = gameSlug
+            };
+
+            return await CRUDUtility.Post<LoginData.TokenResponse>($"{ENDPOINT}/device/code", JsonConvert.SerializeObject(req));
+        }
+
+
+        public static async Task<LoginData.TokenPollResponse> TokenPoll(string deviceCode)
+        {
+            var req = new LoginData.TokenPollRequest
+            {
+                deviceCode = deviceCode
+            };
+
+            return await CRUDUtility.Post<LoginData.TokenPollResponse>($"{ENDPOINT}/device/token", JsonConvert.SerializeObject(req));
         }
     }
 }

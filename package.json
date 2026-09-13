@@ -1,22 +1,22 @@
 {
   "name": "dev.samuelepadalino.d2jam4unity",
   "displayName": "D2Jam for Unity",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Unity Package to use the Down2Jam api for you jam entries",
   "author": {
     "name": "Samuele Padalino (R4ndomThunder)",
     "url": "https://samuelepadalino.dev",
     "email": "info@samuelepadalino.dev"
   },
-  "license":"MIT",
+  "license": "MIT",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "0.0.1-security"
   },
-  "samples":[
+  "samples": [
     {
-      "displayName":"Api usage example",
-      "description":"A class that contains an example of what you can do with this plugin",
-      "path":"Samples/ApiUsageExample"
+      "displayName": "Api usage example",
+      "description": "A class that contains an example of what you can do with this plugin",
+      "path": "Samples/ApiUsageExample"
     }
   ]
 }
