@@ -89,5 +89,36 @@ namespace Down2Jam4Unity.Models
             public string name;
             public string profilePicture;
         }
+
+        [Serializable]
+        public class TokenRevokeRequest
+        {
+            public string id;
+        }
+
+        [Serializable]
+        public class TokenRevokeResponse
+        {
+            public bool success;
+            public string message;
+        }
+
+        [Serializable]
+        public class TokenListResponse
+        {
+            public bool success;
+            public TokenListData[] data;
+        }
+
+
+        [Serializable]
+        public class TokenListData
+        {
+            public string id;
+            public string name;
+            public string keyPrefix;
+            public string createAt;
+            public string lastUsedAt;
+        }
     }
 }

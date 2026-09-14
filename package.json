@@ -1,7 +1,7 @@
 {
   "name": "dev.samuelepadalino.d2jam4unity",
   "displayName": "D2Jam for Unity",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A Unity Package to use the Down2Jam api for you jam entries",
   "author": {
     "name": "Samuele Padalino (R4ndomThunder)",

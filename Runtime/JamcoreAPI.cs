@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace Down2Jam4Unity
@@ -12,6 +13,12 @@ namespace Down2Jam4Unity
     {
         public const string ENDPOINT = "https://d2jam.com/api/v1";
 
+        /// <summary>
+        /// Login using Username and Password
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
         public static async Task<LoginData.Response> Login(string username, string password)
         {
             var body = new LoginData.Request()
@@ -23,6 +30,12 @@ namespace Down2Jam4Unity
             return await CRUDUtility.Post<LoginData.Response>($"{ENDPOINT}/session", JsonConvert.SerializeObject(body));
         }
 
+        /// <summary>
+        /// Unlocks an achievement
+        /// </summary>
+        /// <param name="achievementId">Numeric ID of the Achievement</param>
+        /// <param name="token">Token returned by login</param>
+        /// <returns></returns>
         public static async Task<AchievementData.Response> UnlockAchievement(int achievementId, string token)
         {
             var headers = new List<RequestHeader>()
@@ -40,6 +53,12 @@ namespace Down2Jam4Unity
             return await CRUDUtility.Post<AchievementData.Response>($"{ENDPOINT}/achievement", JsonConvert.SerializeObject(body), customHeaders: headers);
         }
 
+        /// <summary>
+        /// Upload an image from local memory
+        /// </summary>
+        /// <param name="filePath">Path to image</param>
+        /// <param name="token">Token returned by login</param>
+        /// <returns></returns>
         public static async Task<ImageData.Response> UploadImage(string filePath, string token)
         {
             var headers = new List<RequestHeader>()
@@ -53,15 +72,23 @@ namespace Down2Jam4Unity
             var fileName = Path.GetFileName(filePath);
 
             List<IMultipartFormSection> form = new();
-            var aaa = new MultipartFormFileSection("upload", byteData, fileName, "image/png");
-            form.Add(aaa);
+            var fileData = new MultipartFormFileSection("upload", byteData, fileName, "image/png");
+            form.Add(fileData);
 
-            byte[] boundary = System.Text.Encoding.UTF8.GetBytes("----WebKitFormBoundarycB6W4LTiLz6oXMuB");
+            byte[] boundary = System.Text.Encoding.UTF8.GetBytes(GenerateWebKitBoundary());
 
             return await CRUDUtility.Upload<ImageData.Response>($"{ENDPOINT}/image", form, boundary, contentType: "application/json; charset=utf-8", customHeaders: headers);
         }
 
-        public static async Task<LeaderboardData.Response> UploadScoreOnLeaderboard(int leaderboardId, int score, string imgPath, string token)
+        /// <summary>
+        /// Upload a new score to a leaderboard
+        /// </summary>
+        /// <param name="leaderboardId">Numeric ID of the leaderboard</param>
+        /// <param name="score">Score you want to submit</param>
+        /// <param name="imgUrl">Url of an image to use as evidence (Use <b>UploadImage</b> method to upload one)</param>
+        /// <param name="token">Token returned by login</param>
+        /// <returns></returns>
+        public static async Task<LeaderboardData.Response> UploadScoreOnLeaderboard(int leaderboardId, int score, string imgUrl, string token)
         {
             var headers = new List<RequestHeader>()
             {
@@ -72,7 +99,7 @@ namespace Down2Jam4Unity
 
             var body = new LeaderboardData.Request
             {
-                evidence = imgPath,
+                evidence = imgUrl,
                 leaderboardId = leaderboardId,
                 score = score,
             };
@@ -80,19 +107,28 @@ namespace Down2Jam4Unity
             return await CRUDUtility.Post<LeaderboardData.Response>($"{ENDPOINT}/score", JsonConvert.SerializeObject(body), customHeaders: headers);
         }
 
-        public static async Task<LoginData.TokenResponse> LoginWithToken(string userName, string gameSlug)
+        /// <summary>
+        /// Create a new token request for device
+        /// </summary>
+        /// <param name="gameSlug">Your game slug</param>
+        /// <returns></returns>
+        public static async Task<LoginData.TokenResponse> LoginWithToken(string gameSlug)
         {
             var req = new LoginData.TokenRequest
             {
-                clientName = userName,
+                clientName = $"{Application.productName}-{Application.platform}",
                 gameSlug = gameSlug
             };
 
             return await CRUDUtility.Post<LoginData.TokenResponse>($"{ENDPOINT}/device/code", JsonConvert.SerializeObject(req));
         }
 
-
-        public static async Task<LoginData.TokenPollResponse> TokenPoll(string deviceCode)
+        /// <summary>
+        /// Check if the token is approved or not by user (Check this every ~10 seconds)
+        /// </summary>
+        /// <param name="deviceCode">Code returned by <b>LoginWithToken</b> method</param>
+        /// <returns></returns>
+        public static async Task<LoginData.TokenPollResponse> CheckTokenStatus(string deviceCode)
         {
             var req = new LoginData.TokenPollRequest
             {
@@ -100,6 +136,63 @@ namespace Down2Jam4Unity
             };
 
             return await CRUDUtility.Post<LoginData.TokenPollResponse>($"{ENDPOINT}/device/token", JsonConvert.SerializeObject(req));
+        }
+
+        /// <summary>
+        /// Get available user's tokens. Used to get a token id for revoking.
+        /// </summary>
+        /// <param name="token">Token returned by login</param>
+        /// <returns></returns>
+        public static async Task<LoginData.TokenListResponse> GetUserTokens(string token)
+        {
+            var headers = new List<RequestHeader>()
+            {
+                new(){
+                    name = "Authorization", value = $"Bearer {token}"
+                }
+            };
+            return await CRUDUtility.Get<LoginData.TokenListResponse>($"{ENDPOINT}/self/game-tokens", customHeaders: headers);
+        }
+
+        /// <summary>
+        /// Revoke an approved token for user.
+        /// </summary>
+        /// <param name="tokenId">Token ID taken from <b>GetUserToken</b> method</param>
+        /// <param name="token">Token returned by login</param>
+        /// <returns></returns>
+        public static async Task<LoginData.TokenRevokeResponse> RevokeToken(string tokenId, string token)
+        {
+            var headers = new List<RequestHeader>()
+            {
+                new(){
+                    name = "Authorization", value = $"Bearer {token}"
+                }
+            };
+
+            var req = new LoginData.TokenRevokeRequest
+            {
+                id = tokenId
+            };
+
+            return await CRUDUtility.Delete<LoginData.TokenRevokeResponse>($"{ENDPOINT}/self/game-tokens", JsonConvert.SerializeObject(req), customHeaders: headers);
+        }
+
+        /// <summary>
+        /// Create a WebkitBoundary for image uploading
+        /// </summary>
+        /// <returns></returns>
+        private static string GenerateWebKitBoundary()
+        {
+            string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            char[] randomChars = new char[16];
+            System.Random random = new System.Random();
+
+            for (int i = 0; i < randomChars.Length; i++)
+            {
+                randomChars[i] = chars[random.Next(chars.Length)];
+            }
+
+            return "----WebKitFormBoundary" + new string(randomChars);
         }
     }
 }

@@ -75,7 +75,7 @@ namespace Down2Jam4Unity.Utility
 
             using var www = new UnityWebRequest(url, "POST");
 
-            www.SetRequestHeader("Content-Type", contentType);
+            www.SetRequestHeader("Content-Type", "multipart/form-data; boundary=" + System.Text.Encoding.UTF8.GetString(boundary, 0, boundary.Length));
             www.downloadHandler = new DownloadHandlerBuffer();
             byte[] payload = null;
 
