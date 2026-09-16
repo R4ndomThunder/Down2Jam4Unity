@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,9 +19,8 @@ namespace Down2Jam4Unity.Utility
         /// <param name="contentType">Content Type of the body</param>
         /// <param name="customHeaders">Request additional headers</param>
         /// <returns></returns>
-        public static async Task<TResultType> Post<TResultType>(string url, string body, string contentType = "application/json", List<RequestHeader> customHeaders = null)
+        public static async UniTask<TResultType> Post<TResultType>(string url, string body, string contentType = "application/json", List<RequestHeader> customHeaders = null)
         {
-            Debug.Log($"[Post] ~ url: {url} \nbody: {body}");
             using var www = UnityWebRequest.Post($"{url}", body, contentType);
 
             www.SetRequestHeader("Content-Type", contentType);
@@ -45,7 +45,6 @@ namespace Down2Jam4Unity.Utility
                 if (string.IsNullOrEmpty(jsonResponse)) return default;
 
                 var result = JsonUtility.FromJson<TResultType>(jsonResponse);
-                Debug.Log($"Success: {www.downloadHandler.text}");
                 www.Dispose();
 
                 return result;
@@ -69,10 +68,8 @@ namespace Down2Jam4Unity.Utility
         /// <param name="contentType">Should be always multipart/form-data</param>
         /// <param name="customHeaders">Other needed headers (such as auth). Optional.</param>
         /// <returns></returns>
-        public static async Task<TResultType> Upload<TResultType>(string url, List<IMultipartFormSection> form, byte[] boundary, string contentType = "multipart/form-data", List<RequestHeader> customHeaders = null)
+        public static async UniTask<TResultType> Upload<TResultType>(string url, List<IMultipartFormSection> form, byte[] boundary, string contentType = "multipart/form-data", List<RequestHeader> customHeaders = null)
         {
-            Debug.Log($"[Upload] ~ url: {url}");
-
             using var www = new UnityWebRequest(url, "POST");
 
             www.SetRequestHeader("Content-Type", "multipart/form-data; boundary=" + System.Text.Encoding.UTF8.GetString(boundary, 0, boundary.Length));
@@ -91,8 +88,6 @@ namespace Down2Jam4Unity.Utility
             }
 
             var content = System.Text.Encoding.UTF8.GetString(payload);
-
-            Debug.Log(content);
 
             UploadHandler uploadHandler = new UploadHandlerRaw(payload)
             {
@@ -121,7 +116,6 @@ namespace Down2Jam4Unity.Utility
                 if (string.IsNullOrEmpty(jsonResponse)) return default;
 
                 var result = JsonUtility.FromJson<TResultType>(jsonResponse);
-                Debug.Log($"Response: {www.downloadHandler.text}");
                 www.Dispose();
 
                 return result;
@@ -142,7 +136,7 @@ namespace Down2Jam4Unity.Utility
         /// <param name="url">API Endpoint</param>
         /// <param name="customHeaders">Request additional headers</param>
         /// <returns></returns>
-        public static async Task<TResultType> Get<TResultType>(string url, List<RequestHeader> customHeaders = null)
+        public static async UniTask<TResultType> Get<TResultType>(string url, List<RequestHeader> customHeaders = null)
         {
             using var www = UnityWebRequest.Get(url);
 
@@ -160,14 +154,12 @@ namespace Down2Jam4Unity.Utility
                 await Task.Yield();
 
             var jsonResponse = www.downloadHandler.text;
-            Debug.Log(jsonResponse);
             if (www.result != UnityWebRequest.Result.Success)
                 Debug.LogError($"Failed: {www.error}");
 
             try
             {
                 var result = JsonUtility.FromJson<TResultType>(jsonResponse);
-                Debug.Log($"Success {www.downloadHandler.text}");
                 www.Dispose();
 
                 return result;
@@ -190,9 +182,8 @@ namespace Down2Jam4Unity.Utility
         /// <param name="contentType">Content Type of the body</param>
         /// <param name="customHeaders">Request additional headers</param>
         /// <returns></returns>
-        public static async Task<TResultType> Put<TResultType>(string url, string body, string contentType = "application/json", List<RequestHeader> customHeaders = null)
+        public static async UniTask<TResultType> Put<TResultType>(string url, string body, string contentType = "application/json", List<RequestHeader> customHeaders = null)
         {
-            Debug.Log($"[Post] ~ url: {url} \nbody: {body}");
             using var www = UnityWebRequest.Put($"{url}", body);
 
             www.SetRequestHeader("Content-Type", contentType);
@@ -217,7 +208,6 @@ namespace Down2Jam4Unity.Utility
                 if (string.IsNullOrEmpty(jsonResponse)) return default;
 
                 var result = JsonUtility.FromJson<TResultType>(jsonResponse);
-                Debug.Log($"Success: {www.downloadHandler.text}");
                 www.Dispose();
 
                 return result;
@@ -239,9 +229,8 @@ namespace Down2Jam4Unity.Utility
         /// <param name="contentType">Content Type of the body</param>
         /// <param name="customHeaders">Request additional headers</param>
         /// <returns></returns>
-        public static async Task<TResultType> Delete<TResultType>(string url, string contentType = "application/json", List<RequestHeader> customHeaders = null)
+        public static async UniTask<TResultType> Delete<TResultType>(string url, string contentType = "application/json", List<RequestHeader> customHeaders = null)
         {
-            Debug.Log($"[Delete] ~ url: {url}");
             using var www = UnityWebRequest.Delete($"{url}");
 
             www.SetRequestHeader("Content-Type", contentType);
@@ -267,7 +256,6 @@ namespace Down2Jam4Unity.Utility
                 if (string.IsNullOrEmpty(jsonResponse)) return default;
 
                 var result = JsonUtility.FromJson<TResultType>(jsonResponse);
-                Debug.Log($"Success: {www.downloadHandler.text}");
                 www.Dispose();
 
                 return result;
@@ -360,6 +348,67 @@ namespace Down2Jam4Unity.Utility
             formData.AddRange(dDash);
             formData.AddRange(crlf);
             return formData.ToArray();
+        }
+
+        /// <summary>
+        /// Download an AudioClip from web
+        /// </summary>
+        /// <param name="url">Url to the audio file</param>
+        /// <param name="extension">Extension/Format of the audio file</param>
+        /// <returns></returns>
+        public static async UniTask<AudioClip> GetAudioClipStreaming(string url, AudioType extension)
+        {
+            using UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip(url, extension);
+
+            var operation = req.SendWebRequest();
+
+            while (!operation.isDone)
+                await Task.Yield();
+
+            if (req.result == UnityWebRequest.Result.Success)
+            {
+                var audioClip = DownloadHandlerAudioClip.GetContent(req);
+                req.Dispose();
+
+                return audioClip;
+            }
+            else
+            {
+                Debug.LogError($"GetAudioClipStreaming Error.\n{req.error}");
+                req.Dispose();
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Download a Texture from web
+        /// </summary>
+        /// <param name="url">Url to the image file</param>
+        /// <returns></returns>
+        public static async UniTask<Texture2D> GetTexture2D(string url)
+        {
+            using UnityWebRequest req = UnityWebRequestTexture.GetTexture(url);
+
+            var operation = req.SendWebRequest();
+
+            while (!operation.isDone)
+                await Task.Yield();
+
+            if (req.result == UnityWebRequest.Result.Success)
+            {
+                var texture = DownloadHandlerTexture.GetContent(req);
+                req.Dispose();
+
+                return texture;
+            }
+            else
+            {
+                Debug.LogError($"GetTexture2D Error.\n{req.error}\n{req.downloadHandler.error}");
+                req.Dispose();
+
+                return null;
+            }
         }
     }
 }

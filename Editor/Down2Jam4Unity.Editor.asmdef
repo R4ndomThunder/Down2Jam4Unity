@@ -1,12 +1,15 @@
 {
-    "name": "Down2Jam4Unity",
-    "rootNamespace": "Down2Jam4Unity",
+    "name": "Down2Jam4Unity.Editor",
+    "rootNamespace": "Down2Jam4Unity.Editor",
     "references": [
         "GUID:188b3715ef7d23342afc9ffa6530c143",
         "GUID:2eadefb4b6a78dd4ab2272cf28a0cabb",
+        "GUID:132cf3f373ce74c4695d4f0b28a05793",
         "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

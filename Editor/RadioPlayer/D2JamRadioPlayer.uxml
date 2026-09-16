@@ -1,0 +1,22 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/dev.samuelepadalino.d2jam4unity/Editor/RadioPlayer/D2JamRadioPlayer.uss?fileID=7433441132597879392&amp;guid=8919149b40c8a5c419b95fdf8ae01144&amp;type=3#D2JamRadioPlayer"/>
+    <ui:VisualElement name="Container" style="flex-grow: 1; flex-direction: row; align-self: auto; justify-content: space-evenly; align-items: auto; width: 450px; height: 120px; border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-left-color: rgb(26, 28, 75); border-right-color: rgb(26, 28, 75); border-top-color: rgb(26, 28, 75); border-bottom-color: rgb(26, 28, 75); align-content: auto; border-top-left-radius: 20px; border-top-right-radius: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px;">
+        <ui:VisualElement name="Picture" style="flex-grow: 0; width: auto; justify-content: space-evenly; align-items: center; align-self: center; aspect-ratio: auto; height: 150px; align-content: stretch;">
+            <ui:Image name="AlbumImage" style="aspect-ratio: 1; align-self: center; justify-content: center; align-content: center; border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-left-radius: 20px; border-top-right-radius: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px; border-left-color: rgb(26, 28, 75); border-right-color: rgb(26, 28, 75); border-top-color: rgb(26, 28, 75); border-bottom-color: rgb(26, 28, 75); width: 100px; height: 100px; overflow: hidden; background-color: rgb(26, 28, 75);"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="RightSide" style="flex-grow: 0; align-self: center; justify-content: space-around; align-content: center; align-items: center; flex-shrink: 0; height: 120px;">
+            <ui:VisualElement name="Infos" style="flex-grow: 0; flex-direction: column; height: 60px; justify-content: space-between; width: 300px;">
+                <ui:Label text="Loading..." name="Title" style="width: 300px; font-size: 18px; -unity-text-align: middle-left; -unity-font-style: bold; text-overflow: ellipsis; -unity-text-auto-size: none;"/>
+                <ui:Label text="" name="Author" enable-rich-text="true"/>
+                <ui:Label text="" name="GameName" style="-unity-font-style: normal;"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="Controls" style="flex-grow: 0; width: 300px; flex-direction: row; justify-content: center; align-self: center; align-items: center; align-content: center;">
+                <ui:ProgressBar value="1.46" title="0:00/0:00" name="TimeProgress" high-value="1" class="radio-progress-bar" style="-unity-text-align: middle-left; align-self: center; flex-shrink: 1; flex-grow: 1; opacity: 1; -unity-background-image-tint-color: rgb(60, 60, 60);"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="VolumeContainer" style="flex-grow: 0; align-self: center; align-items: center; align-content: center; flex-direction: row; justify-content: center; width: 300px;">
+                <ui:Toggle label="Stream Safe Radio" name="UseStreamerSafe" value="true" style="font-size: 10px; -unity-text-align: middle-center; align-self: center; justify-content: center; align-content: center; align-items: center; flex-direction: row-reverse; overflow: hidden;"/>
+                <ui:Slider label="Volume" value="42" high-value="1" fill="true" name="VolumeSlider" style="align-self: center; align-content: center; justify-content: space-between; align-items: center; width: 300px; flex-grow: 1; flex-shrink: 1;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

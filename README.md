@@ -5,8 +5,17 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/R4ndomThunder/Down2Jam4Unity)
 ![GitHub last release](https://img.shields.io/github/v/release/R4ndomThunder/Down2Jam4Unity)
 
-# Description
-A Unity Package to use the Down2Jam api for you jam entries.
+# About
+A Unity Package to use the Down2Jam API into you jam entries.
+
+### Features
+- Ready to use APIs for Passwordless Login, Leaderboard and Achievemvents.
+- In-engine D2Jam official radio
+- More to come...
+
+# Dependency
+
+### - [UniTask](https://github.com/Cysharp/UniTask/tree/master#getting-started): Provides an efficient allocation free async/await integration for Unity.
 
 # How to install
 
@@ -18,7 +27,7 @@ A Unity Package to use the Down2Jam api for you jam entries.
 - Click `Install`
 - Wait & Enjoy! :D
 
-### Using **Manifest.json**
+### Using **manifest.json**
 - Open your manifest.json file @`Packages/manifest.json`
 - Add this line into the file
 ```json 

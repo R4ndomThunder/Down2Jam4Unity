@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using Down2Jam4Unity.Models;
 using Down2Jam4Unity.Utility;
 using Newtonsoft.Json;
@@ -19,7 +20,7 @@ namespace Down2Jam4Unity
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public static async Task<LoginData.Response> Login(string username, string password)
+        public static async UniTask<LoginData.Response> Login(string username, string password)
         {
             var body = new LoginData.Request()
             {
@@ -36,7 +37,7 @@ namespace Down2Jam4Unity
         /// <param name="achievementId">Numeric ID of the Achievement</param>
         /// <param name="token">Token returned by login</param>
         /// <returns></returns>
-        public static async Task<AchievementData.Response> UnlockAchievement(int achievementId, string token)
+        public static async UniTask<AchievementData.Response> UnlockAchievement(int achievementId, string token)
         {
             var headers = new List<RequestHeader>()
             {
@@ -59,7 +60,7 @@ namespace Down2Jam4Unity
         /// <param name="filePath">Path to image</param>
         /// <param name="token">Token returned by login</param>
         /// <returns></returns>
-        public static async Task<ImageData.Response> UploadImage(string filePath, string token)
+        public static async UniTask<ImageData.Response> UploadImage(string filePath, string token)
         {
             var headers = new List<RequestHeader>()
             {
@@ -88,7 +89,7 @@ namespace Down2Jam4Unity
         /// <param name="imgUrl">Url of an image to use as evidence (Use <b>UploadImage</b> method to upload one)</param>
         /// <param name="token">Token returned by login</param>
         /// <returns></returns>
-        public static async Task<LeaderboardData.Response> UploadScoreOnLeaderboard(int leaderboardId, int score, string imgUrl, string token)
+        public static async UniTask<LeaderboardData.Response> UploadScoreOnLeaderboard(int leaderboardId, int score, string imgUrl, string token)
         {
             var headers = new List<RequestHeader>()
             {
@@ -112,7 +113,7 @@ namespace Down2Jam4Unity
         /// </summary>
         /// <param name="gameSlug">Your game slug</param>
         /// <returns></returns>
-        public static async Task<LoginData.TokenResponse> LoginWithToken(string gameSlug)
+        public static async UniTask<LoginData.TokenResponse> LoginWithToken(string gameSlug)
         {
             var req = new LoginData.TokenRequest
             {
@@ -128,7 +129,7 @@ namespace Down2Jam4Unity
         /// </summary>
         /// <param name="deviceCode">Code returned by <b>LoginWithToken</b> method</param>
         /// <returns></returns>
-        public static async Task<LoginData.TokenPollResponse> CheckTokenStatus(string deviceCode)
+        public static async UniTask<LoginData.TokenPollResponse> CheckTokenStatus(string deviceCode)
         {
             var req = new LoginData.TokenPollRequest
             {
@@ -143,7 +144,7 @@ namespace Down2Jam4Unity
         /// </summary>
         /// <param name="token">Token returned by login</param>
         /// <returns></returns>
-        public static async Task<LoginData.TokenListResponse> GetUserTokens(string token)
+        public static async UniTask<LoginData.TokenListResponse> GetUserTokens(string token)
         {
             var headers = new List<RequestHeader>()
             {
@@ -160,7 +161,7 @@ namespace Down2Jam4Unity
         /// <param name="tokenId">Token ID taken from <b>GetUserToken</b> method</param>
         /// <param name="token">Token returned by login</param>
         /// <returns></returns>
-        public static async Task<LoginData.TokenRevokeResponse> RevokeToken(string tokenId, string token)
+        public static async UniTask<LoginData.TokenRevokeResponse> RevokeToken(string tokenId, string token)
         {
             var headers = new List<RequestHeader>()
             {
@@ -193,6 +194,16 @@ namespace Down2Jam4Unity
             }
 
             return "----WebKitFormBoundary" + new string(randomChars);
+        }
+
+        /// <summary>
+        /// Get the current song that D2Jam radio is playing
+        /// </summary>
+        /// <param name="station"></param>
+        /// <returns></returns>
+        public static async UniTask<RadioData.ResponseData> GetCurrentRadio(string station)
+        {
+            return await CRUDUtility.Get<RadioData.ResponseData>($"{ENDPOINT}/radio?station={station}");
         }
     }
 }
