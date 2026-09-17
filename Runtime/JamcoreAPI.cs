@@ -82,6 +82,30 @@ namespace Down2Jam4Unity
         }
 
         /// <summary>
+        /// Upload an image from local memory
+        /// </summary>
+        /// <param name="filePath">Path to image</param>
+        /// <param name="token">Token returned by login</param>
+        /// <returns></returns>
+        public static async UniTask<ImageData.Response> UploadImage(byte[] byteData, string filename, string token)
+        {
+            var headers = new List<RequestHeader>()
+            {
+                new(){
+                    name = "Authorization", value = $"Bearer {token}"
+                }
+            };
+
+            List<IMultipartFormSection> form = new();
+            var fileData = new MultipartFormFileSection("upload", byteData, filename, "image/png");
+            form.Add(fileData);
+
+            byte[] boundary = System.Text.Encoding.UTF8.GetBytes(GenerateWebKitBoundary());
+
+            return await CRUDUtility.Upload<ImageData.Response>($"{ENDPOINT}/image", form, boundary, contentType: "application/json; charset=utf-8", customHeaders: headers);
+        }
+
+        /// <summary>
         /// Upload a new score to a leaderboard
         /// </summary>
         /// <param name="leaderboardId">Numeric ID of the leaderboard</param>
