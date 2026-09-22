@@ -229,5 +229,14 @@ namespace Down2Jam4Unity
         {
             return await CRUDUtility.Get<RadioData.ResponseData>($"{ENDPOINT}/radio?station={station}");
         }
+
+        /// <summary>
+        /// Return a list of all D2Jam jams
+        /// </summary>
+        /// <returns></returns>
+        public static async UniTask<JamsData.Response> GetJams()
+        {
+            return await CRUDUtility.Get<JamsData.Response>($"{ENDPOINT}/jams");
+        }
     }
 }

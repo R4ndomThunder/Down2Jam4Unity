@@ -1,0 +1,11 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/dev.samuelepadalino.d2jam4unity/Editor/JamTracker/JamTracker.uss?fileID=7433441132597879392&amp;guid=95c7d56a63c0bb74b84439861132b93b&amp;type=3#JamTracker"/>
+    <ui:VisualElement name="MainContainer" style="flex-grow: 1; align-items: center; justify-content: flex-start; align-self: stretch;">
+        <ui:VisualElement name="TitleContainer" style="flex-grow: 0; flex-direction: row; height: 50px; align-items: center; justify-content: center; align-self: center;">
+            <ui:Label text="Suca" name="JamName" style="font-size: 20px; -unity-font-style: bold; -unity-text-align: middle-center;"/>
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 0; align-self: stretch; justify-content: space-between; align-items: stretch; flex-direction: row; -unity-text-align: upper-left;">
+            <ui:ProgressBar value="22" title="Rating ends in 7d 23h" name="JamProgress" style="align-self: stretch; justify-content: flex-start; align-items: stretch; flex-grow: 1; flex-shrink: 1;"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

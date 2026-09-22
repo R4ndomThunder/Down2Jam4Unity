@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using Down2Jam4Unity.Models;
 using Down2Jam4Unity.Utility;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.Toolbars;
@@ -35,6 +36,8 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
 
         RadioData.CurrentSongData currentSong;
 
+        CancellationTokenSource cToken;
+
         bool isOpen = false;
 
         [MenuItem("D2Jam/Radio Player")]
@@ -43,19 +46,20 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
             D2JamRadioPlayer wnd = GetWindow<D2JamRadioPlayer>();
             wnd.minSize = new Vector2(450, 120);
             wnd.maxSize = new Vector2(450.1f, 120.1f);
-            wnd.titleContent = new GUIContent("D2Jam Radio Player");
+            wnd.titleContent = new GUIContent("D2Jam Radio Player", Resources.Load("D2JamRadio") as Texture2D);
         }
 
-        [MainToolbarElement("D2Jam Radio", defaultDockPosition = MainToolbarDockPosition.Right)]
+        [MainToolbarElement("D2Jam/D2Jam Radio", defaultDockPosition = MainToolbarDockPosition.Right)]
         public static MainToolbarElement RadioButton()
         {
-            Texture2D assetIcon = EditorGUIUtility.IconContent("AudioListener Icon").image as Texture2D;
+            Texture2D assetIcon = Resources.Load("D2JamRadio") as Texture2D;
             return new MainToolbarButton(new MainToolbarContent("D2Jam Radio", assetIcon, "Opens the D2Jam radio"), ShowWindow);
         }
 
         public void CreateGUI()
         {
             EditorUtility.audioMasterMute = false;
+            Application.runInBackground = true;
 
             EditorApplication.quitting += Quitting;
             EditorApplication.playModeStateChanged += OnPlaymodeChange;
@@ -125,17 +129,20 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
 
         private void OpenGamePage()
         {
-            Application.OpenURL($"https://d2jam.com/g/{currentSong.track.gamePage.game.slug}");
+            if (currentSong != null)
+                Application.OpenURL($"https://d2jam.com/g/{currentSong.track.gamePage.game.slug}");
         }
 
         private void OpenSongPage()
         {
-            Application.OpenURL($"https://d2jam.com/m/{currentSong.track.slug}");
+            if (currentSong != null)
+                Application.OpenURL($"https://d2jam.com/m/{currentSong.track.slug}");
         }
 
         private void OpenAuthorPage()
         {
-            Application.OpenURL($"https://d2jam.com/u/{currentSong.track.composer.slug}");
+            if (currentSong != null)
+                Application.OpenURL($"https://d2jam.com/u/{currentSong.track.composer.slug}");
         }
 
         private void OnPlaymodeChange(PlayModeStateChange change)
@@ -197,16 +204,19 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
         {
             EditorUtility.audioMasterMute = EditorPrefs.GetBool("AudioMasterMute");
 
+            if (cToken != null)
+                cToken.Cancel(false);
+
             DestroyAudioSource();
             EditorApplication.quitting -= Quitting;
             EditorApplication.playModeStateChanged -= OnPlaymodeChange;
             EditorApplication.focusChanged -= OnChangeFocus;
         }
 
-        private void OnProjectChange()
-        {
-            CloseWindow();
-        }
+        //private void OnProjectChange()
+        //{
+        //    DestroyAudioSource(false);
+        //}
 
         void CreateAudioSource()
         {
@@ -215,9 +225,11 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
             GetRadioData();
         }
 
-        void DestroyAudioSource()
+        void DestroyAudioSource(bool closing = true)
         {
-            isOpen = false;
+            if (closing)
+                isOpen = false;
+
             if (m_AudioSource != null)
                 DestroyImmediate(m_AudioSource.gameObject);
 
@@ -225,25 +237,28 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
 
         async void SetDataInUI()
         {
-            titleLabel.text = currentSong.track.name;
-            authorLabel.text = $"Author: <u>{currentSong.track.composer.name}</u>";
-            gameLabel.text = $"Game: <u>{currentSong.track.gamePage.name}</u>";
-
-            if (lastThumbnailUrl != currentSong.track.gamePage.soundtrackThumbnail)
+            if (currentSong != null)
             {
+                titleLabel.text = currentSong.track.name;
+                authorLabel.text = $"Author: <u>{currentSong.track.composer.name}</u>";
+                gameLabel.text = $"Game: <u>{currentSong.track.gamePage.name}</u>";
                 var thumbnailUrl = currentSong.track.gamePage.soundtrackThumbnail;
                 if (string.IsNullOrEmpty(thumbnailUrl))
                     thumbnailUrl = currentSong.track.gamePage.thumbnail;
 
-                var texture = await GetThumbnail(thumbnailUrl);
-                if (texture != null)
+                if (lastThumbnailUrl != thumbnailUrl)
                 {
-                    lastThumbnail = Sprite.Create(texture, new Rect(Vector2.zero, new Vector2(texture.width, texture.height)), Vector2.one / 2);
-                    lastThumbnail.name = currentSong.track.name;
+                    var texture = await GetThumbnail(thumbnailUrl);
+                    if (texture != null)
+                    {
+                        lastThumbnail = Sprite.Create(texture, new Rect(Vector2.zero, new Vector2(texture.width, texture.height)), Vector2.one / 2);
+                        lastThumbnail.name = currentSong.track.name;
+                    }
                 }
-            }
 
-            thumbnail.sprite = lastThumbnail;
+                if (lastThumbnail != null)
+                    thumbnail.sprite = lastThumbnail;
+            }
         }
 
         bool isLoading = false;
@@ -251,6 +266,7 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
         {
             if (isLoading) return;
 
+            currentSong = null;
             isLoading = true;
             titleLabel.text = "Loading...";
             authorLabel.text = string.Empty;
@@ -284,7 +300,9 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
                     else
                     {
                         m_AudioSource.Pause();
-                        await UniTask.Delay(180000 - ((int)currTrack.offsetSeconds * 1000));
+                        titleLabel.text = $"Waiting for the next song...";
+                        cToken = new();
+                        await UniTask.Delay(180000 - ((int)currTrack.offsetSeconds * 1000), cancellationToken: cToken.Token);
                         m_AudioSource.time = m_AudioSource.clip.length - 2;
                     }
 
@@ -302,7 +320,8 @@ namespace Down2Jam4Unity.Editor.D2JamRadio
                     else
                     {
                         m_AudioSource.Pause();
-                        await UniTask.Delay(180000 - ((int)currTrack.offsetSeconds * 1000));
+                        titleLabel.text = $"Waiting for the next song...";
+                        await UniTask.Delay(180000 - ((int)currTrack.offsetSeconds * 1000), cancellationToken: cToken.Token);
                         m_AudioSource.time = m_AudioSource.clip.length - 2;
                     }
                 }
